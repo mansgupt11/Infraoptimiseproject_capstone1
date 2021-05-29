@@ -22,7 +22,7 @@
      become: yes
      become_method: sudo
      become_user: root
-     command: sh /tmp/kubernetes_join_command
+     command: sh /tmp/kubernetes_join_command --ignore-preflight-errors=all
      register: joined_or_not
 
    - debug:
