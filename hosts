@@ -1,0 +1,10 @@
+[masters]
+master ansible_host=10.0.4.239 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
+
+[workers]
+worker1 ansible_host=10.0.1.163 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
+worker2 ansible_host=10.0.4.196 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
+worker3 ansible_host=10.0.1.186 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
