@@ -4,7 +4,7 @@ master ansible_host=10.0.4.244 ansible_user=ubuntu ansible_ssh_private_key_file=
 [workers]
 worker1 ansible_host=10.0.1.13 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
 worker2 ansible_host=10.0.4.164 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
-worker3 ansible_host=10.0.4.164 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
+worker3 ansible_host=10.0.1.111 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/cloudtls.pem
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
