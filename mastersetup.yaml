@@ -11,6 +11,7 @@
 
    - name: Intilizing Kubernetes Cluster
      command: kubeadm init --ignore-preflight-errors=all
+     become_user: ubuntu
      run_once: true
 
    - pause: seconds=20
