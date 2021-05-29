@@ -12,7 +12,6 @@
    - name: Intilizing Kubernetes Cluster
      command: kubeadm init --ignore-preflight-errors=all
      run_once: true
-     delegate_to: "{{ k8s_master_ip }}"
 
    - pause: seconds=20
 
