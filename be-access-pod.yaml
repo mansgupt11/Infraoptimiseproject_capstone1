@@ -1,0 +1,17 @@
+kind: NetworkPolicy
+metadata:
+  name: netpolicy-db
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: "frontend"
+
+#kebectl create -f be-access-pod.yaml
+#kubectl get notpol
+
+
