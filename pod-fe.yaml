@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: frontend
+    env: prod
+  name: fe-nginx
+spec:
+  containers:
+  - image: nginx
+    name: fe-nginx
+    ports:
+    - containerPort: 80
+
+
+#kubectl apply -f pod-fe.yaml
+#kubectl get pods -o wide
