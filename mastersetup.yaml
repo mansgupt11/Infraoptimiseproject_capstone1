@@ -11,11 +11,11 @@
 
    - name: Intilizing Kubernetes Cluster
      command: kubeadm init --ignore-preflight-errors=all
-     become_user: ubuntu
+     become_user: root
      become_method: sudo
      run_once: true
 
-   - pause: seconds=20
+   - pause: seconds=10
 
    - name: Create directory for kube config.
      become_user: ubuntu
@@ -52,9 +52,9 @@
 
    - name: Install weave pod network
      become: false
-     command: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+     shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
-   - pause: seconds=30
+   - pause: seconds=10
 
    - name: Get the token for joining the nodes with Kuberentes master.
      shell: kubeadm token create  --print-join-command
