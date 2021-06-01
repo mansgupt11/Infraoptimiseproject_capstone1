@@ -1,0 +1,227 @@
+root@k8s-master:~# openssl genrsa -out myuser.key 2048
+Generating RSA private key, 2048 bit long modulus (2 primes)
+.................................................................................................+++++
+.................+++++
+e is 65537 (0x010001)
+root@k8s-master:~# openssl req -new -key myuser.key -out myuser.csr
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:
+State or Province Name (full name) [Some-State]:
+Locality Name (eg, city) []:
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+Organizational Unit Name (eg, section) []:
+Common Name (e.g. server FQDN or YOUR name) []:
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+root@k8s-master:~#
+root@k8s-master:~# cat <<EOF | kubectl apply -f -
+> apiVersion: certificates.k8s.io/v1
+> kind: CertificateSigningRequest
+> metadata:
+>   name: myuser
+> spec:
+>   groups:
+>   - system:authenticated
+>   request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1ZqQ0NBVDRDQVFBd0VURVBNQTBHQTFVRUF3d0dZVzVuWld4aE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQVE4QU1JSUJDZ0tDQVFFQTByczhJTHRHdTYxakx2dHhWTTJSVlRWMDNHWlJTWWw0dWluVWo4RElaWjBOCnR2MUZtRVFSd3VoaUZsOFEzcWl0Qm0wMUFSMkNJVXBGd2ZzSjZ4MXF3ckJzVkhZbGlBNVhwRVpZM3ExcGswSDQKM3Z3aGJlK1o2MVNrVHF5SVBYUUwrTWM5T1Nsbm0xb0R2N0NtSkZNMUlMRVI3QTVGZnZKOEdFRjJ6dHBoaUlFMwpub1dtdHNZb3JuT2wzc2lHQ2ZGZzR4Zmd4eW8ybmlneFNVekl1bXNnVm9PM2ttT0x1RVF6cXpkakJ3TFJXbWlECklmMXBMWnoyalVnald4UkhCM1gyWnVVV1d1T09PZnpXM01LaE8ybHEvZi9DdS8wYk83c0x0MCt3U2ZMSU91TFcKcW90blZtRmxMMytqTy82WDNDKzBERHk5aUtwbXJjVDBnWGZLemE1dHJRSURBUUFCb0FBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBR05WdmVIOGR4ZzNvK21VeVRkbmFjVmQ1N24zSkExdnZEU1JWREkyQTZ1eXN3ZFp1L1BVCkkwZXpZWFV0RVNnSk1IRmQycVVNMjNuNVJsSXJ3R0xuUXFISUh5VStWWHhsdnZsRnpNOVpEWllSTmU3QlJvYXgKQVlEdUI5STZXT3FYbkFvczFqRmxNUG5NbFpqdU5kSGxpT1BjTU1oNndLaTZzZFhpVStHYTJ2RUVLY01jSVUyRgpvU2djUWdMYTk0aEpacGk3ZnNMdm1OQUxoT045UHdNMGM1dVJVejV4T0dGMUtCbWRSeEgvbUNOS2JKYjFRQm1HCkkwYitEUEdaTktXTU0xMzhIQXdoV0tkNjVoVHdYOWl4V3ZHMkh4TG1WQzg0L1BHT0tWQW9FNkpsYWFHdTlQVmkKdjlOSjVaZlZrcXdCd0hKbzZXdk9xVlA3SVFjZmg3d0drWm89Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+>   signerName: kubernetes.io/kube-apiserver-client
+>   usages:
+>   - client auth
+> EOF
+certificatesigningrequest.certificates.k8s.io/myuser created
+root@k8s-master:~# kubectl get csr
+NAME        AGE     SIGNERNAME                                    REQUESTOR                     CONDITION
+csr-rcdf9   5m59s   kubernetes.io/kube-apiserver-client-kubelet   system:node:ip-172-31-5-185   Pending
+myuser      34s     kubernetes.io/kube-apiserver-client           kubernetes-admin              Pending
+root@k8s-master:~# kubectl get csr myuser
+NAME     AGE   SIGNERNAME                            REQUESTOR          CONDITION
+myuser   45s   kubernetes.io/kube-apiserver-client   kubernetes-admin   Pending
+root@k8s-master:~# kubectl certificate approve myuser
+certificatesigningrequest.certificates.k8s.io/myuser approved
+root@k8s-master:~# kubectl get csr myuser
+NAME     AGE   SIGNERNAME                            REQUESTOR          CONDITION
+myuser   58s   kubernetes.io/kube-apiserver-client   kubernetes-admin   Approved,Issued
+root@k8s-master:~# kubectl get csr/myuser -o yaml
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"certificates.k8s.io/v1","kind":"CertificateSigningRequest","metadata":{"annotations":{},"name":"myuser"},"spec":{"groups":["system:authenticated"],"request":"LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1ZqQ0NBVDRDQVFBd0VURVBNQTBHQTFVRUF3d0dZVzVuWld4aE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQVE4QU1JSUJDZ0tDQVFFQTByczhJTHRHdTYxakx2dHhWTTJSVlRWMDNHWlJTWWw0dWluVWo4RElaWjBOCnR2MUZtRVFSd3VoaUZsOFEzcWl0Qm0wMUFSMkNJVXBGd2ZzSjZ4MXF3ckJzVkhZbGlBNVhwRVpZM3ExcGswSDQKM3Z3aGJlK1o2MVNrVHF5SVBYUUwrTWM5T1Nsbm0xb0R2N0NtSkZNMUlMRVI3QTVGZnZKOEdFRjJ6dHBoaUlFMwpub1dtdHNZb3JuT2wzc2lHQ2ZGZzR4Zmd4eW8ybmlneFNVekl1bXNnVm9PM2ttT0x1RVF6cXpkakJ3TFJXbWlECklmMXBMWnoyalVnald4UkhCM1gyWnVVV1d1T09PZnpXM01LaE8ybHEvZi9DdS8wYk83c0x0MCt3U2ZMSU91TFcKcW90blZtRmxMMytqTy82WDNDKzBERHk5aUtwbXJjVDBnWGZLemE1dHJRSURBUUFCb0FBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBR05WdmVIOGR4ZzNvK21VeVRkbmFjVmQ1N24zSkExdnZEU1JWREkyQTZ1eXN3ZFp1L1BVCkkwZXpZWFV0RVNnSk1IRmQycVVNMjNuNVJsSXJ3R0xuUXFISUh5VStWWHhsdnZsRnpNOVpEWllSTmU3QlJvYXgKQVlEdUI5STZXT3FYbkFvczFqRmxNUG5NbFpqdU5kSGxpT1BjTU1oNndLaTZzZFhpVStHYTJ2RUVLY01jSVUyRgpvU2djUWdMYTk0aEpacGk3ZnNMdm1OQUxoT045UHdNMGM1dVJVejV4T0dGMUtCbWRSeEgvbUNOS2JKYjFRQm1HCkkwYitEUEdaTktXTU0xMzhIQXdoV0tkNjVoVHdYOWl4V3ZHMkh4TG1WQzg0L1BHT0tWQW9FNkpsYWFHdTlQVmkKdjlOSjVaZlZrcXdCd0hKbzZXdk9xVlA3SVFjZmg3d0drWm89Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=","signerName":"kubernetes.io/kube-apiserver-client","usages":["client auth"]}}
+  creationTimestamp: "2021-05-30T19:43:47Z"
+  managedFields:
+  - apiVersion: certificates.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+      f:spec:
+        f:groups: {}
+        f:request: {}
+        f:signerName: {}
+        f:usages: {}
+    manager: kubectl-client-side-apply
+    operation: Update
+    time: "2021-05-30T19:43:47Z"
+  - apiVersion: certificates.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:status:
+        f:certificate: {}
+    manager: kube-controller-manager
+    operation: Update
+    time: "2021-05-30T19:44:42Z"
+  - apiVersion: certificates.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:status:
+        f:conditions:
+          .: {}
+          k:{"type":"Approved"}:
+            .: {}
+            f:lastTransitionTime: {}
+            f:lastUpdateTime: {}
+            f:message: {}
+            f:reason: {}
+            f:status: {}
+            f:type: {}
+    manager: kubectl
+    operation: Update
+    time: "2021-05-30T19:44:42Z"
+  name: myuser
+  resourceVersion: "1286"
+  uid: 036c2749-4995-44bf-8569-c836221c2deb
+spec:
+  groups:
+  - system:masters
+  - system:authenticated
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1ZqQ0NBVDRDQVFBd0VURVBNQTBHQTFVRUF3d0dZVzVuWld4aE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQVE4QU1JSUJDZ0tDQVFFQTByczhJTHRHdTYxakx2dHhWTTJSVlRWMDNHWlJTWWw0dWluVWo4RElaWjBOCnR2MUZtRVFSd3VoaUZsOFEzcWl0Qm0wMUFSMkNJVXBGd2ZzSjZ4MXF3ckJzVkhZbGlBNVhwRVpZM3ExcGswSDQKM3Z3aGJlK1o2MVNrVHF5SVBYUUwrTWM5T1Nsbm0xb0R2N0NtSkZNMUlMRVI3QTVGZnZKOEdFRjJ6dHBoaUlFMwpub1dtdHNZb3JuT2wzc2lHQ2ZGZzR4Zmd4eW8ybmlneFNVekl1bXNnVm9PM2ttT0x1RVF6cXpkakJ3TFJXbWlECklmMXBMWnoyalVnald4UkhCM1gyWnVVV1d1T09PZnpXM01LaE8ybHEvZi9DdS8wYk83c0x0MCt3U2ZMSU91TFcKcW90blZtRmxMMytqTy82WDNDKzBERHk5aUtwbXJjVDBnWGZLemE1dHJRSURBUUFCb0FBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBR05WdmVIOGR4ZzNvK21VeVRkbmFjVmQ1N24zSkExdnZEU1JWREkyQTZ1eXN3ZFp1L1BVCkkwZXpZWFV0RVNnSk1IRmQycVVNMjNuNVJsSXJ3R0xuUXFISUh5VStWWHhsdnZsRnpNOVpEWllSTmU3QlJvYXgKQVlEdUI5STZXT3FYbkFvczFqRmxNUG5NbFpqdU5kSGxpT1BjTU1oNndLaTZzZFhpVStHYTJ2RUVLY01jSVUyRgpvU2djUWdMYTk0aEpacGk3ZnNMdm1OQUxoT045UHdNMGM1dVJVejV4T0dGMUtCbWRSeEgvbUNOS2JKYjFRQm1HCkkwYitEUEdaTktXTU0xMzhIQXdoV0tkNjVoVHdYOWl4V3ZHMkh4TG1WQzg0L1BHT0tWQW9FNkpsYWFHdTlQVmkKdjlOSjVaZlZrcXdCd0hKbzZXdk9xVlA3SVFjZmg3d0drWm89Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - client auth
+  username: kubernetes-admin
+status:
+  certificate: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5ekNDQWQrZ0F3SUJBZ0lSQU9KeXZqTU1WTU43QTNYVHFLYzhZUDR3RFFZSktvWklodmNOQVFFTEJRQXcKRlRFVE1CRUdBMVVFQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TVRBMU16QXhPVE01TkRKYUZ3MHlNakExTXpBeApPVE01TkRKYU1CRXhEekFOQmdOVkJBTVRCbUZ1WjJWc1lUQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQCkFEQ0NBUW9DZ2dFQkFOSzdQQ0M3UnJ1dFl5NzdjVlROa1ZVMWROeG1VVW1KZUxvcDFJL0F5R1dkRGJiOVJaaEUKRWNMb1loWmZFTjZvclFadE5RRWRnaUZLUmNIN0Nlc2Rhc0t3YkZSMkpZZ09WNlJHV042dGFaTkIrTjc4SVczdgptZXRVcEU2c2lEMTBDL2pIUFRrcFo1dGFBNyt3cGlSVE5TQ3hFZXdPUlg3eWZCaEJkczdhWVlpQk41NkZwcmJHCktLNXpwZDdJaGdueFlPTVg0TWNxTnA0b01VbE15THBySUZhRHQ1SmppN2hFTTZzM1l3Y0MwVnBvZ3lIOWFTMmMKOW8xSUkxc1VSd2QxOW1ibEZscmpqam44MXR6Q29UdHBhdjMvd3J2OUd6dTdDN2RQc0VueXlEcmkxcXFMWjFaaApaUzkvb3p2K2w5d3Z0QXc4dllpcVpxM0U5SUYzeXMydWJhMENBd0VBQWFOR01FUXdFd1lEVlIwbEJBd3dDZ1lJCkt3WUJCUVVIQXdJd0RBWURWUjBUQVFIL0JBSXdBREFmQmdOVkhTTUVHREFXZ0JUbGxBRmowbGNMNE9SdExUY1MKNXo1ZWFjM1lnakFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSVlWamU0US9TMUphTHVFdm9Wb0p4ZU1ETkRlNAphMFh4a1RaUjhlcXB1RlFTWWFHYmR6RHlFRzd0clk4dnJqVytqOWI0UVh4M3pDQ3oxOFN1d0tFSll3OGh5ZUV6CjRZV0k4T3RvKzcwQkUrVm5kOTJwK2xBeDhoT3lNZGJrY3JJaE5kOVlJSVFyUE9pbmY4WFRLTG1SNmh4aUwvL2MKcHJDU3pCM3ErUnY5a0VDZHNhY2cyVGdxMWVPajUyZEFFRFJNK2JVbTBOekN3UGNaTU50WWQ1czFkT3FqNHdscApUUWowZnJLaFpOcWpwV3MzZTZmcXNObmhqWFRMV28yd0IyVWVUcjgvUFgyMi9qL0p6ckIyZnhacHBrbWFodUZaCk16WHBDRStxMVlsOGJmejFUNkFReHRveUhZWFBlSUxyTUw2RkE4OTNXaVpKR3VtQkV6b1FSMVVXa2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+  conditions:
+  - lastTransitionTime: "2021-05-30T19:44:42Z"
+    lastUpdateTime: "2021-05-30T19:44:42Z"
+    message: This CSR was approved by kubectl certificate approve.
+    reason: KubectlApprove
+    status: "True"
+    type: Approved
+root@k8s-master:~# kubectl get csr myuser -o jsonpath='{.status.certificate}'| base64 -d > myuser.crt
+root@k8s-master:~# cat myuser.crt
+-----BEGIN CERTIFICATE-----
+MIIC9zCCAd+gAwIBAgIRAOJyvjMMVMN7A3XTqKc8YP4wDQYJKoZIhvcNAQELBQAw
+FTETMBEGA1UEAxMKa3ViZXJuZXRlczAeFw0yMTA1MzAxOTM5NDJaFw0yMjA1MzAx
+OTM5NDJaMBExDzANBgNVBAMTBmFuZ2VsYTCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBANK7PCC7RrutYy77cVTNkVU1dNxmUUmJeLop1I/AyGWdDbb9RZhE
+EcLoYhZfEN6orQZtNQEdgiFKRcH7CesdasKwbFR2JYgOV6RGWN6taZNB+N78IW3v
+metUpE6siD10C/jHPTkpZ5taA7+wpiRTNSCxEewORX7yfBhBds7aYYiBN56FprbG
+KK5zpd7IhgnxYOMX4McqNp4oMUlMyLprIFaDt5Jji7hEM6s3YwcC0VpogyH9aS2c
+9o1II1sURwd19mblFlrjjjn81tzCoTtpav3/wrv9Gzu7C7dPsEnyyDri1qqLZ1Zh
+ZS9/ozv+l9wvtAw8vYiqZq3E9IF3ys2uba0CAwEAAaNGMEQwEwYDVR0lBAwwCgYI
+KwYBBQUHAwIwDAYDVR0TAQH/BAIwADAfBgNVHSMEGDAWgBTllAFj0lcL4ORtLTcS
+5z5eac3YgjANBgkqhkiG9w0BAQsFAAOCAQEAIYVje4Q/S1JaLuEvoVoJxeMDNDe4
+a0XxkTZR8eqpuFQSYaGbdzDyEG7trY8vrjW+j9b4QXx3zCCz18SuwKEJYw8hyeEz
+4YWI8Oto+70BE+Vnd92p+lAx8hOyMdbkcrIhNd9YIIQrPOinf8XTKLmR6hxiL//c
+prCSzB3q+Rv9kECdsacg2Tgq1eOj52dAEDRM+bUm0NzCwPcZMNtYd5s1dOqj4wlp
+TQj0frKhZNqjpWs3e6fqsNnhjXTLWo2wB2UeTr8/PX22/j/JzrB2fxZppkmahuFZ
+MzXpCE+q1Yl8bfz1T6AQxtoyHYXPeILrML6FA893WiZJGumBEzoQR1UWkg==
+-----END CERTIFICATE-----
+root@k8s-master:~# kubectl create role developer --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods,deployments,services --namespace=devlopment --dry-run=client -o yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: developer
+  namespace: devlopment
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - delete
+root@k8s-master:~# kubectl create namespace devlopment
+namespace/devlopment created
+root@k8s-master:~# kubectl apply -f createroledevlopment.yaml
+role.rbac.authorization.k8s.io/developer created
+root@k8s-master:~# cat createroledevlopment.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+  namespace: devlopment
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - delete
+
+root@k8s-master:~#
+root@k8s-master:~# kubectl create rolebinding developer-binding-myuser --role=developer --user=myuser --dry-run=client -o yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  creationTimestamp: null
+  name: developer-binding-myuser
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: developer
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: myuser
+root@k8s-master:~# vi rolebinding-devloper.yaml
+root@k8s-master:~# kubectl apply -f rolebinding-devloper.yaml
+rolebinding.rbac.authorization.k8s.io/developer-binding-myuser created
+root@k8s-master:~# kubectl config set-credentials myuser --client-key=myuser.key --client-certificate=myuser.crt --embed-certs=true
+User "myuser" set.
+root@k8s-master:~# kubectl config set-context myuser --cluster=kubernetes --user=myuser --namespace=devlopment
+Context "myuser" craeted.
+root@k8s-master:~# kubectl config use-context myuser --namespace=devlopment --user=myuser
+Switched to context "myuser".
